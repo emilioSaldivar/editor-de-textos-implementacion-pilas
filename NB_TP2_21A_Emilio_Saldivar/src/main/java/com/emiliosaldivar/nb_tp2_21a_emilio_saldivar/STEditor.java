@@ -1,5 +1,6 @@
 package com.emiliosaldivar.nb_tp2_21a_emilio_saldivar;
 
+import com.emiliosaldivar.pilas.*;
 /*
  * Java Program to create a text editor using java.
  * The original explanation and source code is available at: https://www.geeksforgeeks.org/java-swing-create-a-simple-text-editor/
@@ -7,251 +8,268 @@ package com.emiliosaldivar.nb_tp2_21a_emilio_saldivar;
  *
  * Esta es una adaptacion para agregar la funcionalidad de "Deshacer"
  */
-import java.awt.*;
 import javax.swing.*;
 import java.io.*;
 import java.awt.event.*;
+import java.awt.print.PrinterException;
 import javax.swing.plaf.metal.*;
-import javax.swing.text.*;
 
 class STEditor extends JFrame implements ActionListener {
-	// Text component
-	JTextArea t;
+    // Text component
 
-	// Frame
-	JFrame f;
-	
-	//File opened
-	File fi;
+    JTextArea t;
 
-	// Constructor
-	STEditor()
-	{
-		fi = null;
-		
-		// Create a frame
-		f = new JFrame("STEditor");
+    // Frame
+    JFrame f;
 
-		try {
-			// Set metal look and feel
-			UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
+    //File opened
+    File fi;
 
-			// Set theme to ocean
-			MetalLookAndFeel.setCurrentTheme(new OceanTheme());
-		}
-		catch (Exception e) {
-		}
+    // Pila para controlar cambios del texto
+    Pila<String> cambios = new Pila<>();
 
-		// Text component
-		t = new JTextArea();
+    // Constructor
+    STEditor() {
+        fi = null;
 
-		// Create a menubar
-		JMenuBar mb = new JMenuBar();
+        // Create a frame
+        f = new JFrame("STEditor");
 
-		// Create amenu for menu
-		JMenu m1 = new JMenu("Archivo");
+        try {
+            // Set metal look and feel
+            UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
 
-		// Create menu items
-		JMenuItem mi1 = new JMenuItem("Nuevo");
-		JMenuItem mi2 = new JMenuItem("Abrir");
-		JMenuItem mi3 = new JMenuItem("Grabar");
-		JMenuItem mi9 = new JMenuItem("Imprimir");
+            // Set theme to ocean
+            MetalLookAndFeel.setCurrentTheme(new OceanTheme());
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException e) {
+        }
 
-		// Add action listener
-		mi1.addActionListener(this);
-		mi2.addActionListener(this);
-		mi3.addActionListener(this);
-		mi9.addActionListener(this);
+        // Text component
+        t = new JTextArea();
 
-		m1.add(mi1);
-		m1.add(mi2);
-		m1.add(mi3);
-		m1.add(mi9);
+        // Create a menubar
+        JMenuBar mb = new JMenuBar();
 
-		// Create amenu for menu
-		JMenu m2 = new JMenu("Editar");
+        // Create amenu for menu
+        JMenu m1 = new JMenu("Archivo");
 
-		// Create menu items
-		JMenuItem mi4 = new JMenuItem("Cortar");
-		JMenuItem mi5 = new JMenuItem("Copiar");
-		JMenuItem mi6 = new JMenuItem("Pegar");
+        // Create menu items
+        JMenuItem mi1 = new JMenuItem("Nuevo");
+        JMenuItem mi2 = new JMenuItem("Abrir");
+        JMenuItem mi3 = new JMenuItem("Grabar");
+        JMenuItem mi9 = new JMenuItem("Imprimir");
 
-		// Add action listener
-		mi4.addActionListener(this);
-		mi5.addActionListener(this);
-		mi6.addActionListener(this);
+        // Add action listener
+        mi1.addActionListener(this);
+        mi2.addActionListener(this);
+        mi3.addActionListener(this);
+        mi9.addActionListener(this);
 
-		m2.add(mi4);
-		m2.add(mi5);
-		m2.add(mi6);
+        m1.add(mi1);
+        m1.add(mi2);
+        m1.add(mi3);
+        m1.add(mi9);
 
-		JMenuItem mc = new JMenuItem("Cerrar");
-		mc.addActionListener(this);
-		
-		JMenuItem md = new JMenuItem("Deshacer");
-		md.addActionListener(this);
+        // Create amenu for menu
+        JMenu m2 = new JMenu("Editar");
 
-		mb.add(m1);
-		mb.add(m2);
-		mb.add(md);
-		mb.add(mc);
+        // Create menu items
+        JMenuItem mi4 = new JMenuItem("Cortar");
+        JMenuItem mi5 = new JMenuItem("Copiar");
+        JMenuItem mi6 = new JMenuItem("Pegar");
 
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.setJMenuBar(mb);
-		f.add(t);
-		f.setSize(500, 500);
-		f.show();		
-	}
+        // Add action listener
+        mi4.addActionListener(this);
+        mi5.addActionListener(this);
+        mi6.addActionListener(this);
 
-	// If a button is pressed
-	public void actionPerformed(ActionEvent e)
-	{
-		String s = e.getActionCommand();
+        m2.add(mi4);
+        m2.add(mi5);
+        m2.add(mi6);
 
-		if (s.equals("Cortar")) {
-			apilarCambios();
-			t.cut();			
-		}
-		else if (s.equals("Copiar")) {
-			t.copy();
-		}
-		else if (s.equals("Pegar")) {
-			apilarCambios();
-			t.paste();
-		}
-		else if (s.equals("Grabar")) {
-			if (fi == null) {
-				// Create an object of JFileChooser class
-				JFileChooser j = new JFileChooser("f:");
+        JMenuItem mc = new JMenuItem("Cerrar");
+        mc.addActionListener(this);
 
-				// Invoke the showsSaveDialog function to show the save dialog
-				int r = j.showSaveDialog(null);
+        JMenuItem md = new JMenuItem("Deshacer");
+        md.addActionListener(this);
 
-				if (r == JFileChooser.APPROVE_OPTION) {
+        mb.add(m1);
+        mb.add(m2);
+        mb.add(md);
+        mb.add(mc);
 
-					// Set the label to the path of the selected directory
-					fi = new File(j.getSelectedFile().getAbsolutePath());
-					grabarArchivo();
-					apilarCambios();
-				}
-				// If the user cancelled the operation
-				else
-					JOptionPane.showMessageDialog(f, "Operacion cancelada");
-				
-			} else {
-				grabarArchivo();
-				apilarCambios();
-			}
-		}
-		else if (s.equals("Imprimir")) {
-			try {
-				// print the file
-				t.print();
-			}
-			catch (Exception evt) {
-				JOptionPane.showMessageDialog(f, evt.getMessage());
-			}
-		}
-		else if (s.equals("Abrir")) {
-			// Create an object of JFileChooser class
-			JFileChooser j = new JFileChooser("f:");
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        f.setJMenuBar(mb);
+        f.add(t);
+        f.setSize(500, 500);
+        f.show();
+    }
 
-			// Invoke the showsOpenDialog function to show the save dialog
-			int r = j.showOpenDialog(null);
+    // If a button is pressed
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        String s = e.getActionCommand();
 
-			// If the user selects a file
-			if (r == JFileChooser.APPROVE_OPTION) {
-				// Set the label to the path of the selected directory
-				fi = new File(j.getSelectedFile().getAbsolutePath());
+        switch (s) {
+            case "Cortar":
+                apilarCambios();
+                t.cut();
+                break;
+            case "Copiar":
+                t.copy();
+                break;
+            case "Pegar":
+                apilarCambios();
+                t.paste();
+                break;
+            case "Grabar":
+                if (fi == null) {
+                    // Create an object of JFileChooser class
+                    JFileChooser j = new JFileChooser("f:");
 
-				try {
-					// String
-					String s1 = "", sl = "";
+                    // Invoke the showsSaveDialog function to show the save dialog
+                    int r = j.showSaveDialog(null);
 
-					// File reader
-					FileReader fr = new FileReader(fi);
+                    if (r == JFileChooser.APPROVE_OPTION) {
 
-					// Buffered reader
-					BufferedReader br = new BufferedReader(fr);
+                        // Set the label to the path of the selected directory
+                        fi = new File(j.getSelectedFile().getAbsolutePath());
+                        grabarArchivo();
+                        apilarCambios();
+                    } // If the user cancelled the operation
+                    else {
+                        JOptionPane.showMessageDialog(f, "Operacion cancelada");
+                    }
 
-					// Initialize sl
-					sl = br.readLine();
+                } else {
+                    grabarArchivo();
+                    apilarCambios();
+                }
+                break;
+            case "Imprimir":
+                    try {
+                // print the file
+                t.print();
+            } catch (PrinterException evt) {
+                JOptionPane.showMessageDialog(f, evt.getMessage());
+            }
+            break;
 
-					// Take the input from the file
-					while ((s1 = br.readLine()) != null) {
-						sl = sl + "\n" + s1;
-					}
+            case "Abrir":
+                // Create an object of JFileChooser class
+                JFileChooser j = new JFileChooser("f:");
+                // Invoke the showsOpenDialog function to show the save dialog
+                int r = j.showOpenDialog(null);
+                // If the user selects a file
+                if (r == JFileChooser.APPROVE_OPTION) {
+                    // Set the label to the path of the selected directory
+                    fi = new File(j.getSelectedFile().getAbsolutePath());
 
-					// Set the text
-					t.setText(sl);
-					
-					vaciarPila();
-				}
-				catch (Exception evt) {
-					JOptionPane.showMessageDialog(f, evt.getMessage());
-				}
-			}
-			// If the user cancelled the operation
-			else
-				JOptionPane.showMessageDialog(f, "Operacion cancelada");
-		}
-		else if (s.equals("Nuevo")) {
-			fi = null;
-			t.setText("");
-			vaciarPila();
-		}
-		else if (s.equals("Cerrar")) {
-			f.setVisible(false);
-			f.dispose();
-			System.exit(0);
-		}
-		else if (s.equals("Deshacer")) {
-			desapilarCambios();
-		}
-	}
-	
-	private void grabarArchivo() {
-		try {
-			// Create a file writer
-			FileWriter wr = new FileWriter(fi, false);
+                    try {
+                        // String
+                        String s1 = "", sl = "";
 
-			// Create buffered writer to write
-			BufferedWriter w = new BufferedWriter(wr);
+                        // File reader
+                        FileReader fr = new FileReader(fi);
 
-			// Write
-			w.write(t.getText());
+                        // Buffered reader
+                        BufferedReader br = new BufferedReader(fr);
 
-			w.flush();
-			w.close();
-		}
-		catch (Exception evt) {
-			JOptionPane.showMessageDialog(f, evt.getMessage());
-		}
-	}
-	
-	private void vaciarPila() {
-		//TO-DO Pendiente: terminar de implementar acción de deshacer
-		//Debe vaciar la pila
-		JOptionPane.showMessageDialog(f, "Operacion pendiente de ser implementada: vaciarPila");
-	}
-	
-	private void apilarCambios() {
-		//TO-DO Pendiente: terminar de implementar acción de deshacer
-		//Debe almacenar el estado actual del texto
-		//que se obtiene de t.getText()
-		JOptionPane.showMessageDialog(f, "Operacion pendiente de ser implementada: ApilarCambios");
-	}
-	
-	private void desapilarCambios() {
-		//TO-DO Pendiente: terminar de implementar acción de deshacer
-		//Debe ir al estado previo del texto almacenado en la Pila Auxiliar
-		//que se puede realizar con t.setText()
-		JOptionPane.showMessageDialog(f, "Operacion pendiente de ser implementada: DesapilarCambios");
-	}
+                        // Initialize sl
+                        sl = br.readLine();
 
-	// Main class
-	public static void main(String args[])
-	{
-		STEditor e = new STEditor();
-	}
+                        // Take the input from the file
+                        while ((s1 = br.readLine()) != null) {
+                            sl = sl + "\n" + s1;
+                        }
+
+                        // Set the text
+                        t.setText(sl);
+
+                        vaciarPila();
+                    } catch (IOException evt) {
+                        JOptionPane.showMessageDialog(f, evt.getMessage());
+                    }
+                } // If the user cancelled the operation
+                else {
+                    JOptionPane.showMessageDialog(f, "Operacion cancelada");
+                }
+                break;
+            case "Nuevo":
+                fi = null;
+                t.setText("");
+                vaciarPila();
+                break;
+            case "Cerrar":
+                f.setVisible(false);
+                f.dispose();
+                System.exit(0);
+            case "Deshacer":
+                desapilarCambios();
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void grabarArchivo() {
+        try {
+            // Create a file writer
+            FileWriter wr = new FileWriter(fi, false);
+
+            // Write
+            try ( // Create buffered writer to write
+                    BufferedWriter w = new BufferedWriter(wr)) {
+                // Write
+                w.write(t.getText());
+
+                w.flush();
+            }
+        } catch (IOException evt) {
+            JOptionPane.showMessageDialog(f, evt.getMessage());
+        }
+    }
+
+    private void vaciarPila() {
+        //Vacia la pila auxiliar en caso de que no este vacia
+        
+        if( !this.cambios.esVacia() )
+            
+            this.cambios.anular();
+        
+    }
+
+    private void apilarCambios() {
+        //Almacenar el estado actual del texto
+        try {
+            this.cambios.apilar( this.t.getText() );//inta acceder a los datos del JTextArea
+        } catch (Exception e) {
+            
+            System.out.println( e.getMessage() );
+        }
+        
+
+        //JOptionPane.showMessageDialog(f, "Operacion pendiente de ser implementada: ApilarCambios");
+    }
+
+    private void desapilarCambios() {
+        //Estado previo del texto almacenado en la Pila Auxiliar
+        
+        try {
+
+            this.t.setText(this.cambios.desapilar());//intentar agregar contenido al texto
+
+        } catch (Exception e) {
+
+            System.out.println(e.getMessage());
+
+        }
+
+        //JOptionPane.showMessageDialog(f, "Operacion pendiente de ser implementada: DesapilarCambios");
+    }
+
+    // Main class
+    public static void main(String args[]) {
+        STEditor e = new STEditor();
+    }
 }
