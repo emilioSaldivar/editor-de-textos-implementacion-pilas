@@ -1,9 +1,0 @@
-com\emiliosaldivar\recetas\datos\IAccesoDatos.class
-com\emiliosaldivar\recetas\presentacion\LibroRecetasPresentacion.class
-com\emiliosaldivar\recetas\excepciones\LecturaDatosEx.class
-com\emiliosaldivar\recetas\domain\Receta.class
-com\emiliosaldivar\recetas\excepciones\AccesoDatosEx.class
-com\emiliosaldivar\recetas\excepciones\EscrituraDatosEx.class
-com\emiliosaldivar\recetas\datos\AccesoDatosImpl.class
-com\emiliosaldivar\recetas\negocio\LibroDeRecetasImplementacion.class
-com\emiliosaldivar\recetas\negocio\ILibroDeRecetas.class
